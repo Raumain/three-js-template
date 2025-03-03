@@ -1,7 +1,7 @@
 <img align="left" src="https://vite.dev/logo.svg" width="100" height="100">
 
 <h3>
-  Three / Vite template
+  Three / Vite template 
 </h3>
 
 [![Use this template](https://gist.githubusercontent.com/juliendargelos/35cfc34447d88883afab621ccaca7021/raw/e10f7581e4218e5b6b68bf300b975940c4c3adc6/github-use-this-template.svg)](https://github.com/new?template_name=three-vite-starter&template_owner=juliendargelos)
