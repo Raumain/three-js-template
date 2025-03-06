@@ -1,72 +1,68 @@
-import type {
-  WebGLRenderer,
-  Scene,
-  Camera
-} from 'three'
+import type { Camera, Scene, WebGLRenderer } from "three";
 
 import {
-  EffectComposer,
-  FXAAEffect,
-  EffectPass,
-  RenderPass
-} from 'postprocessing'
+	EffectComposer,
+	EffectPass,
+	FXAAEffect,
+	RenderPass,
+} from "postprocessing";
 
-import type {
-  Clock,
-  Viewport,
-  Lifecycle
-} from '~/core'
+import type { Clock, Lifecycle, Viewport } from "~/core";
 
-export interface ComposerParameters  {
-  renderer: WebGLRenderer
-  viewport: Viewport
-  clock: Clock
-  scene?: Scene
-  camera?: Camera
+export interface ComposerParameters {
+	renderer: WebGLRenderer;
+	viewport: Viewport;
+	clock: Clock;
+	scene?: Scene;
+	camera?: Camera;
 }
 
 export class Composer extends EffectComposer implements Lifecycle {
-  public clock: Clock
-  public viewport: Viewport
-  public renderPass: RenderPass
-  public effectPass?: EffectPass
-  public fxaaEffect?: FXAAEffect
+	public clock: Clock;
+	public viewport: Viewport;
+	public renderPass: RenderPass;
+	public effectPass?: EffectPass;
+	public fxaaEffect?: FXAAEffect;
 
-  public get camera(): Camera | undefined {
-    return this.renderPass.mainCamera
-  }
+	public get camera(): Camera | undefined {
+		return this.renderPass.mainCamera;
+	}
 
-  public constructor({
-    renderer,
-    viewport,
-    clock,
-    scene,
-    camera
-  }: ComposerParameters) {
-    super(renderer)
-    this.clock = clock
-    this.viewport = viewport
-    this.renderPass = new RenderPass(scene, camera)
-  }
+	public constructor({
+		renderer,
+		viewport,
+		clock,
+		scene,
+		camera,
+	}: ComposerParameters) {
+		super(renderer);
+		this.clock = clock;
+		this.viewport = viewport;
+		this.renderPass = new RenderPass(scene, camera);
+	}
 
-  public async load(): Promise<void> {
-    this.fxaaEffect = new FXAAEffect()
-    this.effectPass = new EffectPass(this.camera, this.fxaaEffect)
+	public async load(): Promise<void> {
+		this.fxaaEffect = new FXAAEffect();
 
-    this.addPass(this.renderPass)
-    this.addPass(this.effectPass)
-  }
+		this.effectPass = new EffectPass(this.camera, this.fxaaEffect);
+		this.effectPass.renderToScreen = true;
 
-  public update(): void {
+		// Set minimum render targets
+		this.addPass(this.renderPass);
+		this.addPass(this.effectPass);
 
-  }
+		// Use one render target instead of multiple if possible
+		this.multisampling = 0; // Disable multisampling for performance
+	}
 
-  public resize(): void {
-    this.getRenderer().setPixelRatio(this.viewport.dpr)
-    this.setSize(this.viewport.size.x, this.viewport.size.y, false)
-  }
+	public update(): void {}
 
-  public render(): void {
-    super.render(this.clock.delta / 1000)
-  }
+	public resize(): void {
+		this.getRenderer().setPixelRatio(this.viewport.dpr);
+		this.setSize(this.viewport.size.x, this.viewport.size.y, false);
+	}
+
+	public render(): void {
+		super.render(this.clock.delta / 1000);
+	}
 }
