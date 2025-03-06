@@ -105,7 +105,7 @@ export class Seagull {
 		console.log("Loading seagull model...");
 		const loader = new GLTFLoader();
 		loader.load(
-			"/assets/models/seagull.glb",
+			"../../assets/models/seagull.glb",
 			(gltf) => {
 				// If we already have a fallback model, remove it from the scene
 				const parent = this.model?.parent;

@@ -11,7 +11,7 @@ import {
 } from "three";
 
 // Import or create your normal map texture
-const normalMapTexture = "/assets/textures/waternormals.jpg";
+const normalMapTexture = "../../assets/textures/waternormals.jpg";
 import fragmentShader from "../shaders/fragment.glsl";
 import vertexShader from "../shaders/vertex.glsl";
 

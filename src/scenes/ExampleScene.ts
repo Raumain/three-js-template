@@ -79,7 +79,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 		const hdrLoader = new RGBELoader().setDataType(HalfFloatType);
 
 		hdrLoader.load(
-			"/assets/textures/autumn_field_puresky_4k.hdr",
+			"../../assets/textures/autumn_field_puresky_4k.hdr",
 			(texture) => {
 				this.pmremGenerator.compileEquirectangularShader();
 				const envMap = this.pmremGenerator.fromEquirectangular(texture).texture;
@@ -102,7 +102,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 		this.ambientSound = new Audio(this.audioListener);
 		const audioLoader = new AudioLoader();
 		audioLoader.load(
-			"/assets/sounds/ambiance.mp3",
+			"../../assets/sounds/ambiance.mp3",
 			(buffer) => {
 				this.ambientSound.setBuffer(buffer);
 				this.ambientSound.setLoop(true);
@@ -245,7 +245,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 
 	public async load(): Promise<void> {
 		this.gltfLoader.load(
-			"/assets/models/island.glb",
+			"../../assets/models/island.glb",
 			(gltf) => {
 				gltf.scene.position.set(0, 8, 0);
 				gltf.scene.traverse((child) => {
