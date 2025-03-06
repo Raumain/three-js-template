@@ -37,7 +37,7 @@ export class GUI extends Pane implements Lifecycle {
 			size: [lifecycleMethods.length, 1],
 			cells: (x: number) => ({ title: lifecycleMethods[x] }),
 			label: "",
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+		// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 		})).on("click", (event: any) => {
 			this.app[lifecycleMethods[event.index[0]]]();
 			this.toggleFpsGraph(this.app.loop.running);
@@ -78,16 +78,19 @@ export class GUI extends Pane implements Lifecycle {
 	private toggleFpsGraph(enabled: boolean): void {
 		this.fpsGraph.disabled = !enabled;
 
-		const stopwatch = this.fpsGraph.controller.valueController.stopwatch_;
-
-		if (!stopwatch.baseCalculateFps_) {
-			stopwatch.baseCalculateFps_ = stopwatch.calculateFps_;
-		}
-
-		stopwatch.calculateFps_ = enabled ? stopwatch.baseCalculateFps_ : () => 0;
+		const originalBegin = this.fpsGraph.begin.bind(this.fpsGraph);
+		const originalEnd = this.fpsGraph.end.bind(this.fpsGraph);
 
 		if (!enabled) {
-			stopwatch.fps_ = 0;
+			this.fpsGraph.begin = () => {
+				/* no-op */
+			};
+			this.fpsGraph.end = () => {
+				/* no-op */
+			};
+		} else {
+			this.fpsGraph.begin = originalBegin;
+			this.fpsGraph.end = originalEnd;
 		}
 	}
 }
