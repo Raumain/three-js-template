@@ -22,7 +22,7 @@ import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import type { Clock, Lifecycle, Viewport } from "~/core";
 import island from "../../assets/models/island.glb";
 import sound from "../../assets/sounds/ambiance.mp3";
-import sky from "../../assets/textures/autumn_field_puresky_4k.hdr";
+import sky from "../../assets/textures/sunset.hdr";
 import OceanRenderer from "../materials/OceanRenderer";
 import { Ball } from "../objects/Ball";
 import { Seagull } from "../objects/Seagull";
