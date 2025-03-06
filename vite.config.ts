@@ -4,14 +4,7 @@ import { viteStaticCopy } from "vite-plugin-static-copy";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
-	assetsInclude: [
-		"**/*.gltf",
-		"**/*.glb",
-		"**/*.obj",
-		"**/*.mtl",
-		"**/*.hdr",
-		"assets/**",
-	],
+	assetsInclude: ["**/*.gltf", "**/*.glb", "**/*.obj", "**/*.mtl", "**/*.hdr"],
 	plugins: [
 		tsconfigPaths(),
 		glsl({
