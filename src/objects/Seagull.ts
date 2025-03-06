@@ -13,6 +13,7 @@ import {
 	Vector3,
 } from "three";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
+import seagull from "../../assets/models/seagull.glb";
 
 export class Seagull {
 	private model: Group | null = null;
@@ -119,7 +120,7 @@ export class Seagull {
 		console.log("Loading seagull model...");
 		const loader = new GLTFLoader();
 		loader.load(
-			"../../assets/models/seagull.glb",
+			seagull,
 			(gltf) => {
 				// If we already have a fallback model, remove it from the scene
 				const parent = this.model?.parent;
