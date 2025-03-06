@@ -244,7 +244,6 @@ export class Seagull {
 
 			// Apply banking/roll based on turning
 			// Calculate how much the bird is turning by looking at change in direction
-			const turnIntensity = Math.abs(direction.x) * 0.5;
 			const bankAngle = direction.x * -0.3; // Bank in the opposite direction of the turn
 
 			// Apply a slight bank and pitch when turning
