@@ -1,3 +1,4 @@
+import type * as CANNON from "cannon";
 import {
 	Audio,
 	AudioListener,
@@ -20,7 +21,9 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import type { Clock, Lifecycle, Viewport } from "~/core";
 import OceanRenderer from "../materials/OceanRenderer";
+import { Ball } from "../objects/Ball";
 import { Seagull } from "../objects/Seagull";
+import { PhysicsWorld } from "../physics/PhysicsWorld";
 
 export interface MainSceneParamaters {
 	clock: Clock;
@@ -50,6 +53,10 @@ export class ExampleScene extends Scene implements Lifecycle {
 	private readonly NUM_SEAGULLS = 5;
 	private remainingSeagulls = 0;
 	private winScreen: HTMLDivElement | null = null;
+
+	// Physics-related properties
+	private physicsWorld: PhysicsWorld;
+	private balls: Ball[] = [];
 
 	public constructor({
 		clock,
@@ -115,6 +122,45 @@ export class ExampleScene extends Scene implements Lifecycle {
 		);
 
 		this.initSeagulls();
+
+		// Initialize physics world
+		this.physicsWorld = new PhysicsWorld();
+	}
+
+	// Add method to throw balls with physics
+	public throwBall(position: Vector3, velocity: Vector3): void {
+		// Create a ball with physics
+		const ball = new Ball(position, velocity, this.onBallCollide.bind(this));
+
+		// Add ball's physics body to the world
+		this.physicsWorld.addBody(ball.getBody());
+
+		// Add ball's mesh to the scene
+		this.add(ball.getMesh());
+
+		// Track the ball
+		this.balls.push(ball);
+	}
+
+	// Handle ball collisions with physics
+
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
+	private onBallCollide(event: any): void {
+		if (!event || !event.body) return;
+
+		// Get the body that the ball collided with
+		const collidedBody: CANNON.Body & {
+			userData: { isSeagull: boolean; seagullInstance: Seagull };
+		} = event.body;
+		// Check if it's a seagull body
+		if (collidedBody.userData?.isSeagull) {
+			// Get the seagull instance
+			const seagull = collidedBody.userData.seagullInstance;
+			if (seagull && !seagull.isHit) {
+				// Hit the seagull
+				seagull.hit();
+			}
+		}
 	}
 
 	private initSeagulls(): void {
@@ -154,6 +200,16 @@ export class ExampleScene extends Scene implements Lifecycle {
 
 			this.seagulls.push(seagull);
 		}
+
+		// Add physics bodies for seagulls after they're created
+		setTimeout(() => {
+			for (const seagull of this.seagulls) {
+				const physicsBody = seagull.getPhysicsBody();
+				if (physicsBody) {
+					this.physicsWorld.addBody(physicsBody);
+				}
+			}
+		}, 1000); // Give time for seagulls to initialize
 
 		// Create win screen (hidden initially)
 		this.createWinScreen();
@@ -275,10 +331,31 @@ export class ExampleScene extends Scene implements Lifecycle {
 	}
 
 	public update(): void {
+		const deltaTime = this.clock.delta;
+
+		// Update physics world
+		this.physicsWorld.update(deltaTime);
+
+		// Update ocean
 		this.oceanRenderer.update();
 
+		// Update seagulls
 		for (const seagull of this.seagulls) {
 			seagull.update();
+		}
+
+		// Update and clean up balls
+		for (let i = this.balls.length - 1; i >= 0; i--) {
+			const ball = this.balls[i];
+			const isAlive = ball.update();
+
+			// If ball is dead, remove it
+			if (!isAlive) {
+				this.remove(ball.getMesh());
+				this.physicsWorld.removeBody(ball.getBody());
+				ball.dispose();
+				this.balls.splice(i, 1);
+			}
 		}
 
 		this.projScreenMatrix.multiplyMatrices(
@@ -315,6 +392,21 @@ export class ExampleScene extends Scene implements Lifecycle {
 			}
 		}
 		this.seagulls = [];
+
+		// Clean up physics bodies
+		for (const ball of this.balls) {
+			this.physicsWorld.removeBody(ball.getBody());
+			ball.dispose();
+		}
+		this.balls = [];
+
+		// Clean up seagull physics bodies
+		for (const seagull of this.seagulls) {
+			const physicsBody = seagull.getPhysicsBody();
+			if (physicsBody) {
+				this.physicsWorld.removeBody(physicsBody);
+			}
+		}
 
 		// Remove win screen if it exists
 		if (this.winScreen?.parentNode) {

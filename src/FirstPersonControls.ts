@@ -54,12 +54,13 @@ export class FirstPersonControls implements Lifecycle {
 	private balls: Mesh[] = [];
 	private ballGeometry: SphereGeometry;
 	private ballMaterial: MeshStandardMaterial;
-	private readonly BALL_LIFETIME = 5000; // milliseconds
-	private readonly BALL_SPEED = 100;
 	private boundOnClick: (event: MouseEvent) => void;
 	private ballRaycaster = new Raycaster();
 	private readonly _v3 = new Vector3(); // Additional reusable vector
-	private readonly BOUNCE_FACTOR = 0.6; // How much velocity is retained after bounce
+	private readonly BOUNCE_FACTOR = 1; // How much velocity is retained after bounce
+	private shootCooldown = 0;
+	private readonly SHOOT_COOLDOWN_TIME = 0.3; // Seconds between shots
+	private readonly THROW_POWER = 25; // Adjust for desired throwing speed
 
 	constructor({
 		camera,
@@ -160,40 +161,27 @@ export class FirstPersonControls implements Lifecycle {
 		}
 	}
 	private throwBall(): void {
-		if (!this.scene) return;
+		if (!this.scene || this.shootCooldown > 0) return;
 
-		// Create ball mesh
-		const ball = new Mesh(this.ballGeometry, this.ballMaterial);
+		// Set cooldown
+		this.shootCooldown = this.SHOOT_COOLDOWN_TIME;
 
-		// Position ball slightly in front of camera
-		ball.position.copy(this.camera.position);
-		const direction = new Vector3(0, 0, -1).applyQuaternion(
+		// Create ball position slightly in front of camera
+		const position = new Vector3(0, 0, -1).applyQuaternion(
 			this.camera.quaternion,
 		);
-		ball.position.addScaledVector(direction, 0.5); // Start slightly in front to avoid collision with camera
+		position.add(this.camera.position);
 
-		// Store velocity with the ball (as a custom property)
-		// @ts-ignore - Adding custom property
-		ball.velocity = direction.multiplyScalar(this.BALL_SPEED);
+		// Get camera direction
+		const direction = new Vector3(0, 0, -1);
+		direction.applyQuaternion(this.camera.quaternion);
+		direction.normalize();
 
-		// Add tag for collision detection with seagulls
-		ball.userData.isBall = true;
+		// Calculate throw velocity (direction * power)
+		const velocity = direction.clone().multiplyScalar(this.THROW_POWER);
 
-		// Add to scene and tracking array
-		this.scene.add(ball);
-		this.balls.push(ball);
-
-		// Set timeout to remove the ball
-		setTimeout(() => {
-			if (this.scene && ball.parent === this.scene) {
-				this.scene.remove(ball);
-			}
-			const index = this.balls.indexOf(ball);
-			if (index > -1) {
-				this.balls.splice(index, 1);
-			}
-			ball.geometry.dispose();
-		}, this.BALL_LIFETIME);
+		// Add the ball to the scene with physics
+		this.scene.throwBall(position, velocity);
 	}
 	private onKeyDown(event: KeyboardEvent): void {
 		switch (event.code) {
@@ -456,6 +444,11 @@ export class FirstPersonControls implements Lifecycle {
 					velocity.set(0, 0, 0);
 				}
 			}
+		}
+
+		// Update shooting cooldown
+		if (this.shootCooldown > 0) {
+			this.shootCooldown -= this.clock.delta / 1000;
 		}
 
 		return true;

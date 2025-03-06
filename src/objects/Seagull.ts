@@ -1,3 +1,4 @@
+import * as CANNON from "cannon";
 import {
 	AnimationMixer,
 	Box3,
@@ -25,8 +26,18 @@ export class Seagull {
 		new Vector3(100, 50, 100),
 	);
 	private modelLoaded = false;
-	private isHit = false;
 	private onHitCallback: (() => void) | null = null;
+	private physicsBody:
+		| (CANNON.Body & {
+				userData: { isSeagull: boolean; seagullInstance: Seagull };
+		  })
+		| null = null;
+	private _isHit = false; // For getter
+
+	// Add getter for isHit property
+	public get isHit(): boolean {
+		return this._isHit;
+	}
 
 	constructor(onHitCallback?: () => void) {
 		// Create a random flight path within bounds
@@ -99,6 +110,9 @@ export class Seagull {
 
 		this.model = group;
 		this.modelLoaded = true;
+
+		// Create a physics body for the seagull
+		this.createPhysicsBody();
 	}
 
 	private loadModel(): void {
@@ -166,6 +180,16 @@ export class Seagull {
 				}
 
 				this.modelLoaded = true;
+
+				// At the end of the model loading function
+				if (this.model) {
+					this.model.userData.seagullInstance = this; // Store reference to instance
+				}
+
+				// Create physics body after model is loaded if not already created
+				if (!this.physicsBody) {
+					this.createPhysicsBody();
+				}
 			},
 			// Progress callback
 			(xhr) => {
@@ -177,6 +201,34 @@ export class Seagull {
 				// We keep the fallback model in this case
 			},
 		);
+	}
+
+	private createPhysicsBody(): void {
+		// Create a physics body for collision detection
+		// Use a sphere shape that approximately matches the seagull size
+		const radius = 2.5; // Adjust based on model size
+		const shape = new CANNON.Sphere(radius);
+
+		// @ts-ignore
+		this.physicsBody = new CANNON.Body({
+			mass: 0, // Kinematic body (we'll update position manually)
+			type: CANNON.Body.KINEMATIC,
+			shape: shape,
+		});
+
+		// Set initial position
+		if (this.model) {
+			this.physicsBody?.position.set(
+				this.model.position.x,
+				this.model.position.y,
+				this.model.position.z,
+			);
+		}
+
+		// Set user data to reference back to this seagull instance
+		if (this.physicsBody) {
+			this.physicsBody.userData = { isSeagull: true, seagullInstance: this };
+		}
 	}
 
 	private createRandomPath(): CatmullRomCurve3 {
@@ -253,6 +305,15 @@ export class Seagull {
 			const verticalAngle = direction.y * 0.5;
 			this.model.rotation.x = verticalAngle;
 		}
+
+		// Update physics body position to match visual model
+		if (this.physicsBody && this.model) {
+			this.physicsBody.position.set(
+				this.model.position.x,
+				this.model.position.y,
+				this.model.position.z,
+			);
+		}
 	}
 
 	public getModel(): Group | null {
@@ -271,9 +332,9 @@ export class Seagull {
 	}
 
 	public hit(): void {
-		if (this.isHit) return; // Prevent multiple hits
+		if (this._isHit) return; // Prevent multiple hits using the backing field
 
-		this.isHit = true;
+		this._isHit = true; // Use backing field
 		console.log("Seagull was hit!");
 
 		// Notify the scene that this seagull was hit
@@ -288,6 +349,11 @@ export class Seagull {
 
 		// Clean up resources
 		this.dispose();
+	}
+
+	// Add getter for physics body
+	public getPhysicsBody(): CANNON.Body | null {
+		return this.physicsBody;
 	}
 
 	public dispose(): void {
