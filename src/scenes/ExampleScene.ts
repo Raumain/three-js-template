@@ -20,6 +20,9 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import type { Clock, Lifecycle, Viewport } from "~/core";
+import island from "../../assets/models/island.glb";
+import sound from "../../assets/sounds/ambiance.mp3";
+import sky from "../../assets/textures/autumn_field_puresky_4k.hdr";
 import OceanRenderer from "../materials/OceanRenderer";
 import { Ball } from "../objects/Ball";
 import { Seagull } from "../objects/Seagull";
@@ -86,7 +89,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 		const hdrLoader = new RGBELoader().setDataType(HalfFloatType);
 
 		hdrLoader.load(
-			"../../assets/textures/autumn_field_puresky_4k.hdr",
+			sky,
 			(texture) => {
 				this.pmremGenerator.compileEquirectangularShader();
 				const envMap = this.pmremGenerator.fromEquirectangular(texture).texture;
@@ -109,7 +112,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 		this.ambientSound = new Audio(this.audioListener);
 		const audioLoader = new AudioLoader();
 		audioLoader.load(
-			"../../assets/sounds/ambiance.mp3",
+			sound,
 			(buffer) => {
 				this.ambientSound.setBuffer(buffer);
 				this.ambientSound.setLoop(true);
@@ -301,7 +304,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 
 	public async load(): Promise<void> {
 		this.gltfLoader.load(
-			"../../assets/models/island.glb",
+			island,
 			(gltf) => {
 				gltf.scene.position.set(0, 8, 0);
 				gltf.scene.traverse((child) => {
