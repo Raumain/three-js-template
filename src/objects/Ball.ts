@@ -24,8 +24,8 @@ export class Ball {
 		// Create three.js visual representation
 		const geometry = new SphereGeometry(this.RADIUS, 16, 16);
 		const material = new MeshStandardMaterial({
-			color: 0x3333ff,
-			emissive: 0x1111aa,
+			color: 0xfda111,
+			emissive: 0xed8111,
 			emissiveIntensity: 0.5,
 			roughness: 0.4,
 		});

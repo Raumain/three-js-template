@@ -1,8 +1,6 @@
 import type * as CANNON from "cannon";
 import {
-	Audio,
-	AudioListener,
-	AudioLoader,
+	type Audio,
 	DirectionalLight,
 	Frustum,
 	HalfFloatType,
@@ -21,7 +19,7 @@ import { RGBELoader } from "three/addons/loaders/RGBELoader.js";
 import { GLTFLoader } from "three/examples/jsm/Addons.js";
 import type { Clock, Lifecycle, Viewport } from "~/core";
 import island from "../../assets/models/island.glb";
-import sound from "../../assets/sounds/ambiance.mp3";
+
 import sky from "../../assets/textures/sunset.hdr";
 import OceanRenderer from "../materials/OceanRenderer";
 import { Ball } from "../objects/Ball";
@@ -49,8 +47,7 @@ export class ExampleScene extends Scene implements Lifecycle {
 
 	private oceanRenderer: OceanRenderer;
 
-	private audioListener: AudioListener;
-	public ambientSound: Audio;
+	public ambientSound: Audio | undefined;
 
 	public seagulls: Seagull[] = [];
 	private readonly NUM_SEAGULLS = 5;
@@ -103,24 +100,6 @@ export class ExampleScene extends Scene implements Lifecycle {
 			undefined,
 			(error) => {
 				console.error("Error loading HDR background:", error);
-			},
-		);
-
-		this.audioListener = new AudioListener();
-		this.camera.add(this.audioListener);
-
-		this.ambientSound = new Audio(this.audioListener);
-		const audioLoader = new AudioLoader();
-		audioLoader.load(
-			sound,
-			(buffer) => {
-				this.ambientSound.setBuffer(buffer);
-				this.ambientSound.setLoop(true);
-				this.ambientSound.setVolume(0.5);
-			},
-			undefined,
-			(error) => {
-				console.error("Error loading ambient sound:", error);
 			},
 		);
 

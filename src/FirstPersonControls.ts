@@ -1,4 +1,7 @@
 import {
+	Audio,
+	AudioListener,
+	AudioLoader,
 	Material,
 	Mesh,
 	MeshStandardMaterial,
@@ -13,6 +16,7 @@ import { Water } from "three/examples/jsm/objects/Water.js";
 import type { Clock, Lifecycle } from "~/core";
 import { Seagull } from "~/objects/Seagull"; // Add Seagull import
 import type { ExampleScene } from "~/scenes/ExampleScene";
+import sound from "../assets/sounds/ambiance.mp3";
 
 export interface FirstPersonControlsParameters {
 	camera: PerspectiveCamera;
@@ -61,6 +65,10 @@ export class FirstPersonControls implements Lifecycle {
 	private shootCooldown = 0;
 	private readonly SHOOT_COOLDOWN_TIME = 0.3; // Seconds between shots
 	private readonly THROW_POWER = 25; // Adjust for desired throwing speed
+
+	// Add audio properties
+	private audioListener: AudioListener | null = null;
+	private ambientSound: Audio | null = null;
 
 	constructor({
 		camera,
@@ -138,10 +146,43 @@ export class FirstPersonControls implements Lifecycle {
 
 		this.controls.addEventListener("lock", () => {
 			instructions.style.display = "none";
+
+			// Initialize audio only once
+			if (!this.audioListener) {
+				this.audioListener = new AudioListener();
+				this.camera.add(this.audioListener);
+
+				this.ambientSound = new Audio(this.audioListener);
+				const audioLoader = new AudioLoader();
+				audioLoader.load(
+					sound,
+					(buffer) => {
+						if (this.ambientSound) {
+							this.ambientSound.setBuffer(buffer);
+							this.ambientSound.setLoop(true);
+							this.ambientSound.setVolume(0.5);
+							// Actually play the sound
+							this.ambientSound.play();
+							console.log("Ambient sound playing");
+						}
+					},
+					undefined,
+					(error) => {
+						console.error("Error loading ambient sound:", error);
+					},
+				);
+			} else if (this.ambientSound && !this.ambientSound.isPlaying) {
+				// Resume sound if already loaded but not playing
+				this.ambientSound.play();
+			}
 		});
 
 		this.controls.addEventListener("unlock", () => {
 			instructions.style.display = "block";
+			// Optionally pause sound when controls are unlocked
+			if (this.ambientSound?.isPlaying) {
+				this.ambientSound.pause();
+			}
 		});
 	}
 
@@ -609,5 +650,17 @@ export class FirstPersonControls implements Lifecycle {
 		document.removeEventListener("keydown", this.onKeyDown.bind(this));
 		document.removeEventListener("keyup", this.onKeyUp.bind(this));
 		this.controls.dispose();
+
+		// Stop and clean up audio
+		if (this.ambientSound) {
+			if (this.ambientSound.isPlaying) {
+				this.ambientSound.stop();
+			}
+			this.ambientSound.disconnect();
+		}
+
+		if (this.audioListener) {
+			this.camera.remove(this.audioListener);
+		}
 	}
 }
